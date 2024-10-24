@@ -12,3 +12,10 @@ wget -O ipv6_manager.sh "https://raw.githubusercontent.com/8730062/ipv6-setup/re
 wget -O manage_realm.sh "https://raw.githubusercontent.com/8730062/ipv6-setup/refs/heads/main/manage_realm.sh" && chmod +x manage_realm.sh && ./manage_realm.sh
 ~~~
 
+不能下载转发脚本的，可以下载脚步上传到服务器指定目录。
+然后：
+~~~shell
+chmod +x manage_realm.sh
+sudo ./manage_realm.sh
+~~~
+学习研究使用，请勿用于违法用途。
