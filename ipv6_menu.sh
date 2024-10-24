@@ -15,7 +15,7 @@ execute_choice() {
         1)
             echo "从 GitHub 下载并运行添加 IPv6 的脚本..."
             # 替换为你在 GitHub 上的脚本链接
-            wget -O ipv6_setup.sh "https://github.com/8730062/ipv6-setup/blob/main/ipv6_setup.sh"
+            wget -O ipv6_setup.sh "https://raw.githubusercontent.com/8730062/ipv6-setup/refs/heads/main/ipv6_setup.sh"
             if [[ -f "ipv6_setup.sh" ]]; then
                 chmod +x ipv6_setup.sh
                 bash ipv6_setup.sh
