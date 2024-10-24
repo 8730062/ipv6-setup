@@ -84,15 +84,60 @@ EOF
     elif [[ "$CONFIG_CHOICE" == "2" ]]; then
         echo_info "您选择了 纯IPv6 → IPv6 转发。"
 
-        read -rp "请输入监听的IPv4地址（例如 0.0.0.0）： " LISTEN_V4
-        read -rp "请输入监听端口（例如 8000）： " LISTEN_PORT_V4
-        read -rp "请输入远程IPv4地址（例如 1.1.1.1）： " REMOTE_V4
-        read -rp "请输入远程端口（例如 443）： " REMOTE_PORT_V4
+        # 设置IPv4的默认值
+        DEFAULT_LISTEN_V4="0.0.0.0"
+        DEFAULT_LISTEN_PORT_V4="8000"
+        DEFAULT_REMOTE_V4="1.1.1.1"
+        DEFAULT_REMOTE_PORT_V4="443"
 
-        read -rp "请输入本机IPv6地址（本机V6）： " LOCAL_V6
-        read -rp "请输入本机端口（本机端口）： " LOCAL_PORT_V6
-        read -rp "请输入落地鸡的IPv6地址（落地鸡V6）： " REMOTE_V6
-        read -rp "请输入落地鸡的端口（落地鸡端口）： " REMOTE_PORT_V6
+        read -rp "请输入监听的IPv4地址（默认: $DEFAULT_LISTEN_V4）： " LISTEN_V4
+        LISTEN_V4=${LISTEN_V4:-$DEFAULT_LISTEN_V4}
+
+        read -rp "请输入监听端口（默认: $DEFAULT_LISTEN_PORT_V4）： " LISTEN_PORT_V4
+        LISTEN_PORT_V4=${LISTEN_PORT_V4:-$DEFAULT_LISTEN_PORT_V4}
+
+        read -rp "请输入远程IPv4地址（默认: $DEFAULT_REMOTE_V4）： " REMOTE_V4
+        REMOTE_V4=${REMOTE_V4:-$DEFAULT_REMOTE_V4}
+
+        read -rp "请输入远程端口（默认: $DEFAULT_REMOTE_PORT_V4）： " REMOTE_PORT_V4
+        REMOTE_PORT_V4=${REMOTE_PORT_V4:-$DEFAULT_REMOTE_PORT_V4}
+
+        # 强制输入IPv6参数
+        while true; do
+            read -rp "请输入本机IPv6地址（本机V6）： " LOCAL_V6
+            if [[ -n "$LOCAL_V6" ]]; then
+                break
+            else
+                echo_error "本机IPv6地址不能为空，请重新输入。"
+            fi
+        done
+
+        while true; do
+            read -rp "请输入本机端口（本机端口）： " LOCAL_PORT_V6
+            if [[ -n "$LOCAL_PORT_V6" ]]; then
+                break
+            else
+                echo_error "本机端口不能为空，请重新输入。"
+            fi
+        done
+
+        while true; do
+            read -rp "请输入落地鸡的IPv6地址（落地鸡V6）： " REMOTE_V6
+            if [[ -n "$REMOTE_V6" ]]; then
+                break
+            else
+                echo_error "落地鸡的IPv6地址不能为空，请重新输入。"
+            fi
+        done
+
+        while true; do
+            read -rp "请输入落地鸡的端口（落地鸡端口）： " REMOTE_PORT_V6
+            if [[ -n "$REMOTE_PORT_V6" ]]; then
+                break
+            else
+                echo_error "落地鸡的端口不能为空，请重新输入。"
+            fi
+        done
 
         cat > "$CONFIG_FILE" <<EOF
 [[endpoints]]
@@ -219,15 +264,60 @@ EOF
     elif [[ "$CONFIG_CHOICE" == "2" ]]; then
         echo_info "您选择了 纯IPv6 → IPv6 转发。"
 
-        read -rp "请输入监听的IPv4地址（例如 0.0.0.0）： " LISTEN_V4
-        read -rp "请输入监听端口（例如 8000）： " LISTEN_PORT_V4
-        read -rp "请输入远程IPv4地址（例如 1.1.1.1）： " REMOTE_V4
-        read -rp "请输入远程端口（例如 443）： " REMOTE_PORT_V4
+        # 设置IPv4的默认值
+        DEFAULT_LISTEN_V4="0.0.0.0"
+        DEFAULT_LISTEN_PORT_V4="8000"
+        DEFAULT_REMOTE_V4="1.1.1.1"
+        DEFAULT_REMOTE_PORT_V4="443"
 
-        read -rp "请输入本机IPv6地址（本机V6）： " LOCAL_V6
-        read -rp "请输入本机端口（本机端口）： " LOCAL_PORT_V6
-        read -rp "请输入落地鸡的IPv6地址（落地鸡V6）： " REMOTE_V6
-        read -rp "请输入落地鸡的端口（落地鸡端口）： " REMOTE_PORT_V6
+        read -rp "请输入监听的IPv4地址（默认: $DEFAULT_LISTEN_V4）： " LISTEN_V4
+        LISTEN_V4=${LISTEN_V4:-$DEFAULT_LISTEN_V4}
+
+        read -rp "请输入监听端口（默认: $DEFAULT_LISTEN_PORT_V4）： " LISTEN_PORT_V4
+        LISTEN_PORT_V4=${LISTEN_PORT_V4:-$DEFAULT_LISTEN_PORT_V4}
+
+        read -rp "请输入远程IPv4地址（默认: $DEFAULT_REMOTE_V4）： " REMOTE_V4
+        REMOTE_V4=${REMOTE_V4:-$DEFAULT_REMOTE_V4}
+
+        read -rp "请输入远程端口（默认: $DEFAULT_REMOTE_PORT_V4）： " REMOTE_PORT_V4
+        REMOTE_PORT_V4=${REMOTE_PORT_V4:-$DEFAULT_REMOTE_PORT_V4}
+
+        # 强制输入IPv6参数
+        while true; do
+            read -rp "请输入本机IPv6地址（本机V6）： " LOCAL_V6
+            if [[ -n "$LOCAL_V6" ]]; then
+                break
+            else
+                echo_error "本机IPv6地址不能为空，请重新输入。"
+            fi
+        done
+
+        while true; do
+            read -rp "请输入本机端口（本机端口）： " LOCAL_PORT_V6
+            if [[ -n "$LOCAL_PORT_V6" ]]; then
+                break
+            else
+                echo_error "本机端口不能为空，请重新输入。"
+            fi
+        done
+
+        while true; do
+            read -rp "请输入落地鸡的IPv6地址（落地鸡V6）： " REMOTE_V6
+            if [[ -n "$REMOTE_V6" ]]; then
+                break
+            else
+                echo_error "落地鸡的IPv6地址不能为空，请重新输入。"
+            fi
+        done
+
+        while true; do
+            read -rp "请输入落地鸡的端口（落地鸡端口）： " REMOTE_PORT_V6
+            if [[ -n "$REMOTE_PORT_V6" ]]; then
+                break
+            else
+                echo_error "落地鸡的端口不能为空，请重新输入。"
+            fi
+        done
 
         cat > "$CONFIG_FILE" <<EOF
 [[endpoints]]
@@ -323,15 +413,21 @@ show_menu() {
     echo "4) 查看 realm 服务状态"
     echo "5) 修改 realm 配置"
     echo "6) 删除 realm"
-    echo "7) 退出"
+    echo "0) 退出"
     echo "=============================="
 }
 
 # 主循环
 while true; do
     show_menu
-    read -rp "请输入您的选择（1-7）： " choice
+    read -rp "请输入您的选择（0-6）： " choice
+    # 去除输入的前后空格
+    choice=$(echo "$choice" | xargs)
     case "$choice" in
+        0)
+            echo_info "退出脚本。"
+            exit 0
+            ;;
         1)
             install_realm
             ;;
@@ -350,12 +446,8 @@ while true; do
         6)
             remove_realm
             ;;
-        7)
-            echo_info "退出脚本。"
-            exit 0
-            ;;
         *)
-            echo_error "无效的选择，请输入1-7之间的数字。"
+            echo_error "无效的选择，请输入0-6之间的数字。"
             ;;
     esac
     echo # 添加一个空行以提高可读性
