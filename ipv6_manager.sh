@@ -125,7 +125,7 @@ while true; do
             exit 0
             ;;
         *)
-            echo "无效的选择，请输入1、2或3。"
+            echo "无效的选择，请输入1、2或0。"
             ;;
     esac
 done
