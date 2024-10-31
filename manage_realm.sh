@@ -32,14 +32,29 @@ if [[ "$EUID" -ne 0 ]]; then
    exit 1
 fi
 
-# 函数：添加一个转发规则
-add_forwarding_rule() {
-    echo "请选择转发规则类型："
+# 安装和配置realm
+install_realm() {
+    echo_info "开始安装realm..."
+
+    # 第1步：下载并解压realm
+    echo_info "从$REALM_URL下载realm..."
+    wget -O "$REALM_TAR" "$REALM_URL"
+
+    echo_info "解压realm..."
+    tar -xvf "$REALM_TAR" -C "$REALM_DIR"
+
+    echo_info "设置realm可执行权限..."
+    chmod +x "$REALM_EXEC"
+
+    # 第2步：配置realm
+    echo_info "配置realm..."
+
+    echo "请选择配置类型："
     echo "1) IPv4 → IPv6 转发"
     echo "2) 纯IPv6 → IPv6 转发"
-    read -rp "请输入选择（1或2）： " RULE_TYPE
+    read -rp "请输入选择（1或2）： " CONFIG_CHOICE
 
-    if [[ "$RULE_TYPE" == "1" ]]; then
+    if [[ "$CONFIG_CHOICE" == "1" ]]; then
         echo_info "您选择了 IPv4 → IPv6 转发。"
 
         read -rp "请输入监听的IPv4地址（例如 0.0.0.0）： " LISTEN_V4
@@ -52,17 +67,21 @@ add_forwarding_rule() {
         read -rp "请输入落地鸡的IPv6地址（落地鸡V6）： " REMOTE_V6
         read -rp "请输入落地鸡的端口（落地鸡端口）： " REMOTE_PORT_V6
 
-        echo "[[endpoints]]" >> "$CONFIG_FILE"
-        echo "listen = "$LISTEN_V4:$LISTEN_PORT_V4"" >> "$CONFIG_FILE"
-        echo "remote = "$REMOTE_V4:$REMOTE_PORT_V4"" >> "$CONFIG_FILE"
-        echo "" >> "$CONFIG_FILE"
+        cat > "$CONFIG_FILE" <<EOF
+[[endpoints]]
+listen = "$LISTEN_V4:$LISTEN_PORT_V4"
+remote = "$REMOTE_V4:$REMOTE_PORT_V4"
 
-        echo "[[endpoints]]" >> "$CONFIG_FILE"
-        echo "listen = "$LOCAL_V4:$LOCAL_PORT_V4"" >> "$CONFIG_FILE"
-        echo "remote = "[$REMOTE_V6]:$REMOTE_PORT_V6"" >> "$CONFIG_FILE"
-        echo "" >> "$CONFIG_FILE"
+[[endpoints]]
+listen = "$LOCAL_V4:$LOCAL_PORT_V4"
+remote = "[$REMOTE_V6]:$REMOTE_PORT_V6"
 
-    elif [[ "$RULE_TYPE" == "2" ]]; then
+[network]
+no_tcp = false
+use_udp = true
+EOF
+
+    elif [[ "$CONFIG_CHOICE" == "2" ]]; then
         echo_info "您选择了 纯IPv6 → IPv6 转发。"
 
         # 设置IPv4的默认值
@@ -120,60 +139,24 @@ add_forwarding_rule() {
             fi
         done
 
-        echo "[[endpoints]]" >> "$CONFIG_FILE"
-        echo "listen = "$LISTEN_V4:$LISTEN_PORT_V4"" >> "$CONFIG_FILE"
-        echo "remote = "$REMOTE_V4:$REMOTE_PORT_V4"" >> "$CONFIG_FILE"
-        echo "" >> "$CONFIG_FILE"
+        cat > "$CONFIG_FILE" <<EOF
+[[endpoints]]
+listen = "$LISTEN_V4:$LISTEN_PORT_V4"
+remote = "$REMOTE_V4:$REMOTE_PORT_V4"
 
-        echo "[[endpoints]]" >> "$CONFIG_FILE"
-        echo "listen = "[$LOCAL_V6]:$LOCAL_PORT_V6"" >> "$CONFIG_FILE"
-        echo "remote = "[$REMOTE_V6]:$REMOTE_PORT_V6"" >> "$CONFIG_FILE"
-        echo "" >> "$CONFIG_FILE"
+[[endpoints]]
+listen = "[$LOCAL_V6]:$LOCAL_PORT_V6"
+remote = "[$REMOTE_V6]:$REMOTE_PORT_V6"
+
+[network]
+no_tcp = false
+use_udp = true
+EOF
 
     else
-        echo_error "无效的选择。请重新添加转发规则。"
-        return
+        echo_error "无效的选择。退出。"
+        exit 1
     fi
-}
-
-# 函数：生成配置文件头部
-generate_config_header() {
-    echo "[network]" > "$CONFIG_FILE"
-    echo "no_tcp = false" >> "$CONFIG_FILE"
-    echo "use_udp = true" >> "$CONFIG_FILE"
-    echo "" >> "$CONFIG_FILE"
-}
-
-# 安装和配置realm
-install_realm() {
-    echo_info "开始安装realm..."
-
-    # 第1步：下载并解压realm
-    echo_info "从$REALM_URL下载realm..."
-    wget -O "$REALM_TAR" "$REALM_URL"
-
-    echo_info "解压realm..."
-    tar -xvf "$REALM_TAR" -C "$REALM_DIR"
-
-    echo_info "设置realm可执行权限..."
-    chmod +x "$REALM_EXEC"
-
-    # 第2步：配置realm
-    echo_info "配置realm..."
-    > "$CONFIG_FILE" # 清空配置文件
-
-    generate_config_header
-
-    while true; do
-        add_forwarding_rule
-        echo "是否要添加另一个转发规则？ (y/n)"
-        read -rp "请输入选择（y/n）： " add_more
-        case "$add_more" in
-            [Yy]* ) ;;
-            [Nn]* ) break ;;
-            * ) echo_error "请输入 y 或 n。";;
-        esac
-    done
 
     echo_info "配置文件已创建在 $CONFIG_FILE。"
 
@@ -246,24 +229,114 @@ modify_realm_config() {
 
     echo_info "开始修改realm配置..."
 
-    # 备份当前配置文件
-    cp "$CONFIG_FILE" "${CONFIG_FILE}.bak"
-    echo_info "已备份当前配置文件为 ${CONFIG_FILE}.bak。"
+    echo "请选择配置类型："
+    echo "1) IPv4 → IPv6 转发"
+    echo "2) 纯IPv6 → IPv6 转发"
+    read -rp "请输入选择（1或2）： " CONFIG_CHOICE
 
-    # 清空配置文件并生成头部
-    > "$CONFIG_FILE"
-    generate_config_header
+    if [[ "$CONFIG_CHOICE" == "1" ]]; then
+        echo_info "您选择了 IPv4 → IPv6 转发。"
 
-    while true; do
-        add_forwarding_rule
-        echo "是否要添加另一个转发规则？ (y/n)"
-        read -rp "请输入选择（y/n）： " add_more
-        case "$add_more" in
-            [Yy]* ) ;;
-            [Nn]* ) break ;;
-            * ) echo_error "请输入 y 或 n。";;
-        esac
-    done
+        read -rp "请输入监听的IPv4地址（例如 0.0.0.0）： " LISTEN_V4
+        read -rp "请输入监听端口（例如 8000）： " LISTEN_PORT_V4
+        read -rp "请输入远程IPv4地址（例如 1.1.1.1）： " REMOTE_V4
+        read -rp "请输入远程端口（例如 443）： " REMOTE_PORT_V4
+
+        read -rp "请输入本机IPv4地址（本机V4）： " LOCAL_V4
+        read -rp "请输入本机端口（本机端口）： " LOCAL_PORT_V4
+        read -rp "请输入落地鸡的IPv6地址（落地鸡V6）： " REMOTE_V6
+        read -rp "请输入落地鸡的端口（落地鸡端口）： " REMOTE_PORT_V6
+
+        cat > "$CONFIG_FILE" <<EOF
+[[endpoints]]
+listen = "$LISTEN_V4:$LISTEN_PORT_V4"
+remote = "$REMOTE_V4:$REMOTE_PORT_V4"
+
+[[endpoints]]
+listen = "$LOCAL_V4:$LOCAL_PORT_V4"
+remote = "[$REMOTE_V6]:$REMOTE_PORT_V6"
+
+[network]
+no_tcp = false
+use_udp = true
+EOF
+
+    elif [[ "$CONFIG_CHOICE" == "2" ]]; then
+        echo_info "您选择了 纯IPv6 → IPv6 转发。"
+
+        # 设置IPv4的默认值
+        DEFAULT_LISTEN_V4="0.0.0.0"
+        DEFAULT_LISTEN_PORT_V4="8000"
+        DEFAULT_REMOTE_V4="1.1.1.1"
+        DEFAULT_REMOTE_PORT_V4="443"
+
+        read -rp "请输入监听的IPv4地址（默认: $DEFAULT_LISTEN_V4）： " LISTEN_V4
+        LISTEN_V4=${LISTEN_V4:-$DEFAULT_LISTEN_V4}
+
+        read -rp "请输入监听端口（默认: $DEFAULT_LISTEN_PORT_V4）： " LISTEN_PORT_V4
+        LISTEN_PORT_V4=${LISTEN_PORT_V4:-$DEFAULT_LISTEN_PORT_V4}
+
+        read -rp "请输入远程IPv4地址（默认: $DEFAULT_REMOTE_V4）： " REMOTE_V4
+        REMOTE_V4=${REMOTE_V4:-$DEFAULT_REMOTE_V4}
+
+        read -rp "请输入远程端口（默认: $DEFAULT_REMOTE_PORT_V4）： " REMOTE_PORT_V4
+        REMOTE_PORT_V4=${REMOTE_PORT_V4:-$DEFAULT_REMOTE_PORT_V4}
+
+        # 强制输入IPv6参数
+        while true; do
+            read -rp "请输入本机IPv6地址（本机V6）： " LOCAL_V6
+            if [[ -n "$LOCAL_V6" ]]; then
+                break
+            else
+                echo_error "本机IPv6地址不能为空，请重新输入。"
+            fi
+        done
+
+        while true; do
+            read -rp "请输入本机端口（本机端口）： " LOCAL_PORT_V6
+            if [[ -n "$LOCAL_PORT_V6" ]]; then
+                break
+            else
+                echo_error "本机端口不能为空，请重新输入。"
+            fi
+        done
+
+        while true; do
+            read -rp "请输入落地鸡的IPv6地址（落地鸡V6）： " REMOTE_V6
+            if [[ -n "$REMOTE_V6" ]]; then
+                break
+            else
+                echo_error "落地鸡的IPv6地址不能为空，请重新输入。"
+            fi
+        done
+
+        while true; do
+            read -rp "请输入落地鸡的端口（落地鸡端口）： " REMOTE_PORT_V6
+            if [[ -n "$REMOTE_PORT_V6" ]]; then
+                break
+            else
+                echo_error "落地鸡的端口不能为空，请重新输入。"
+            fi
+        done
+
+        cat > "$CONFIG_FILE" <<EOF
+[[endpoints]]
+listen = "$LISTEN_V4:$LISTEN_PORT_V4"
+remote = "$REMOTE_V4:$REMOTE_PORT_V4"
+
+[[endpoints]]
+listen = "[$LOCAL_V6]:$LOCAL_PORT_V6"
+remote = "[$REMOTE_V6]:$REMOTE_PORT_V6"
+
+[network]
+no_tcp = false
+use_udp = true
+EOF
+
+    else
+        echo_error "无效的选择。退出。"
+        exit 1
+    fi
 
     echo_info "配置文件已更新在 $CONFIG_FILE。"
 
